@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Reservation System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-container {
+            width: 100%;
+        }
+        .calendar-container {
+            width: 100%;
+            margin-top: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .inline-fields {
+            display: flex;
+            gap: 10px;
+        }
+        .inline-fields > * {
+            flex: 1;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 5px;
+            font-size: 14px;
+        }
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            font-weight: bold;
+            padding: 5px 0;
+            text-align: center;
+        }
+        .day {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50px;
+            flex-direction: column;
+        }
+        .available {
+            background-color: #d4edda;
+        }
+        .booked {
+            background-color: #f8d7da;
+        }
+        .month-header {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .calendar-header {
+            margin-bottom: 10px;
+        }
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .reservation-details {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Lab Reservation Form</h1>
+        <form id="scheduleForm">
+            <div class="inline-fields">
+                <input type="date" id="date" name="date" required>
+                <select id="timeSlot" name="timeSlot" multiple required>
+                    <option value="9:00 AM - 10:00 AM">9:00 AM - 10:00 AM</option>
+                    <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
+                    <option value="11:00 AM - 12:00 PM">11:00 AM - 12:00 PM</option>
+                    <option value="12:00 PM - 01:00 PM">12:00 PM - 01:00 PM</option>
+                    <option value="01:00 PM - 02:00 PM">01:00 PM - 02:00 PM</option>
+                    <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
+                    <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
+                    <option value="04:00 PM - 05:00 PM">04:00 PM - 05:00 PM</option>
+                    <option value="05:00 PM - 06:00 PM">05:00 PM - 06:00 PM</option>
+                    <option value="06:00 PM - 07:00 PM">06:00 PM - 07:00 PM</option>
+                    <option value="07:00 PM - 08:00 PM">07:00 PM - 08:00 PM</option>
+                    <option value="08:00 PM - 09:00 PM">08:00 PM - 09:00 PM</option>
+                </select>
+                <select id="userName" name="userName" required>
+                    <option value="">--Select User--</option>
+                    <option value="Vishal">Vishal</option>
+                    <option value="Pratik">Pratik</option>
+                    <option value="Dr. Bae">Dr. Bae</option>
+                    <option value="Chaewon">Chaewon</option>
+                    <option value="Jiwon">Jiwon</option>
+                </select>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="calendar-container">
+        <h1>Reservation Calendar</h1>
+        <div id="calendar">
+            <!-- Calendar will be dynamically generated here -->
+        </div>
+    </div>
+
+    <script>
+        // Initialize an empty schedule array
+        let schedule = [];
+
+        // Global variable to track the month and year to display
+        let currentViewDate = new Date();
+
+        // Function to render the calendar
+        const renderCalendar = (viewDate) => {
+            const calendar = document.getElementById("calendar");
+            calendar.innerHTML = "";
+
+            const monthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+            const monthEnd = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
+            const daysInMonth = monthEnd.getDate();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const monthName = monthNames[viewDate.getMonth()];
+            const year = viewDate.getFullYear();
+
+            // Display month header
+            const monthHeader = document.createElement("div");
+            monthHeader.classList.add("month-header");
+            monthHeader.textContent = `${monthName} ${year}`;
+            calendar.appendChild(monthHeader);
+
+            // Display days of the week header
+            const calendarHeader = document.createElement("div");
+            calendarHeader.classList.add("calendar-header");
+            dayNames.forEach(day => {
+                const dayHeader = document.createElement("div");
+                dayHeader.textContent = day;
+                calendarHeader.appendChild(dayHeader);
+            });
+            calendar.appendChild(calendarHeader);
+
+            // Display calendar days
+            const calendarDays = document.createElement("div");
+            calendarDays.classList.add("calendar-days");
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+                const dateStr = date.toISOString().split("T")[0];  // Ensure date format is YYYY-MM-DD
+                const dayDiv = document.createElement("div");
+                dayDiv.classList.add("day");
+
+                // Check if the date has any bookings in the schedule array
+                const bookings = schedule.filter((entry) => entry.date === dateStr);
+                if (bookings.length > 0) {
+                    dayDiv.classList.add("booked");
+                } else {
+                    dayDiv.classList.add("available");
+                }
+
+                dayDiv.innerHTML = `
+                    <div>${day}</div>
+                    <div class="reservation-details">
+                        ${bookings.length > 0 ? `${bookings.map(booking => `${booking.userName} ${booking.timeSlot}`).join("<br>")}` : ''}
+                    </div>
+                `;
+                calendarDays.appendChild(dayDiv);
+            }
+            calendar.appendChild(calendarDays);
+        };
+
+        // Function to handle form submission
+        document.getElementById("scheduleForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const date = document.getElementById("date").value; // This is in YYYY-MM-DD format
+            const timeSlots = Array.from(document.getElementById("timeSlot").selectedOptions).map(option => option.value);
+            const userName = document.getElementById("userName").value;
+
+            // Check for overlap before adding the new reservation
+            for (let slot of timeSlots) {
+                const newTimeStart = getTimeStart(slot);
+                const newTimeEnd = getTimeEnd(slot);
+
+                // Check existing bookings for overlap
+                for (let booking of schedule) {
+                    if (booking.date === date) {
+                        const bookedStart = getTimeStart(booking.timeSlot);
+                        const bookedEnd = getTimeEnd(booking.timeSlot);
+
+                        if (isOverlap(newTimeStart, newTimeEnd, bookedStart, bookedEnd)) {
+                            alert("Time slot overlap detected! Please choose another slot.");
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // No overlap found, proceed with the booking
+            const userTimeSlots = timeSlots.sort((a, b) => getTimeStart(a) - getTimeStart(b));
+            const firstTime = userTimeSlots[0];
+            const lastTime = userTimeSlots[userTimeSlots.length - 1];
+
+            schedule.push({ date, timeSlot: `${firstTime.split(' - ')[0]} - ${lastTime.split(' - ')[1]}`, status: "Booked", userName });
+
+            alert("Booking successful!");
+
+            // Update current view date to show the month of the reservation
+            const bookingDate = new Date(date);
+            currentViewDate = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), 1);
+
+            // Clear and re-render the calendar
+            renderCalendar(currentViewDate);
+        });
+
+        // Function to extract the start time (in minutes) from a time range
+        const getTimeStart = (timeSlot) => {
+            const [start,] = timeSlot.split(' - ');
+            return timeToMinutes(start);
+        };
+
+        // Function to extract the end time (in minutes) from a time range
+        const getTimeEnd = (timeSlot) => {
+            const [, end] = timeSlot.split(' - ');
+            return timeToMinutes(end);
+        };
+
+        // Convert time to minutes for easy comparison
+        const timeToMinutes = (time) => {
+            const [hour, minute] = time.split(':');
+            const ampm = time.slice(-2);
+            let hourInt = parseInt(hour);
+            if (ampm === "PM" && hourInt !== 12) hourInt += 12;
+            if (ampm === "AM" && hourInt === 12) hourInt = 0;
+            return hourInt * 60 + parseInt(minute);
+        };
+
+        // Function to check if two time ranges overlap
+        const isOverlap = (start1, end1, start2, end2) => {
+            return (start1 < end2 && start2 < end1);
+        };
+
+        // Initial render of the calendar
+        renderCalendar(currentViewDate);
+    </script>
+</body>
+</html>
